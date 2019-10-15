@@ -39,7 +39,7 @@ python server.py
 ## Как развернуть на сервере
 
 ```bash
-python server.py [--l] [-timeout] [-path]
+python server.py [-l] [-timeout] [-path]
 ```
 
 После этого перенаправить на микросервис запросы, начинающиеся с `/archive/`. Например:

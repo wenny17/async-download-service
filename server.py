@@ -12,16 +12,15 @@ async def archivate(timeout, directory,  request):
     archive_name = request.match_info["archive_hash"]
 
     if not os.path.exists(f"{directory}/{archive_name}"):
-        raise web.HTTPNotFound(text="Archive doesn't exist")
+        raise web.HTTPNotFound(text="<h1>Archive doesn't exist</h1>")
 
-    cmd = f"zip -jr - {directory}/{archive_name}"
 
     response = web.StreamResponse()
     response.headers["Content-Disposition"] = f'attachment; filename="archive-{archive_name}.zip"'
     await response.prepare(request)
 
-    zip_proccess = await asyncio.create_subprocess_shell(
-        cmd,
+    zip_proccess = await asyncio.create_subprocess_exec(
+        "zip", "-jr", "-", f"{directory}/{archive_name}",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE)
 
@@ -37,7 +36,7 @@ async def archivate(timeout, directory,  request):
 
     except asyncio.CancelledError:
         logging.info("Download was interrupted")
-        await asyncio.create_subprocess_exec("./rkill.sh", str(zip_proccess.pid))
+        zip_proccess.kill()
         raise
     finally:
         response.force_close()
@@ -58,13 +57,13 @@ def get_arguments():
     parser.add_argument("-timeout", action="store_true")
     return parser.parse_args()
 
-if __name__ == '__main__':
+
+def main():
     args = get_arguments()
 
     if args.logging:
         logging.basicConfig(level=logging.DEBUG)
-    if args.path:
-        DIR_PHOTO = args.path
+
 
     archivate_wrapper = partial(archivate, args.timeout, args.path)
 
@@ -75,3 +74,6 @@ if __name__ == '__main__':
     ])
     web.run_app(app)
 
+
+if __name__ == '__main__':
+    main()
